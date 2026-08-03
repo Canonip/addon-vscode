@@ -28,6 +28,23 @@ options+=(--auth none)
 export HASS_SERVER="http://supervisor/core"
 export HASS_TOKEN="${SUPERVISOR_TOKEN:-}"
 
+# Persist Claude Code auth/config in the add-on's /data volume, so it
+# survives add-on restarts and image updates (container root fs does not).
+export CLAUDE_CONFIG_DIR="/data/claude"
+mkdir -p "${CLAUDE_CONFIG_DIR}"
+
+# Optionally route Claude Code through a LiteLLM (or other Anthropic-
+# compatible) gateway instead of api.anthropic.com.
+if bashio::config.has_value 'anthropic_base_url'; then
+    export ANTHROPIC_BASE_URL="$(bashio::config 'anthropic_base_url')"
+fi
+if bashio::config.has_value 'anthropic_auth_token'; then
+    export ANTHROPIC_AUTH_TOKEN="$(bashio::config 'anthropic_auth_token')"
+fi
+if bashio::config.has_value 'anthropic_model'; then
+    export ANTHROPIC_MODEL="$(bashio::config 'anthropic_model')"
+fi
+
 # Run the code server
 cd "${config_path}" || bashio::exit.nok "Could not change working directory"
 exec code-server "${options[@]}" "${config_path}"

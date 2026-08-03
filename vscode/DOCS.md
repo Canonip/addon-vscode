@@ -84,6 +84,26 @@ Customize your VSCode environment even more with the `init_commands` option.
 Add one or more shell commands to the list, and they will be executed every
 single time this add-on starts.
 
+### Option: `anthropic_base_url`
+
+Point the built-in Claude Code CLI/extension at an Anthropic-compatible
+gateway (e.g. a LiteLLM proxy) instead of `api.anthropic.com`. Example:
+`http://192.168.1.50:4000`.
+
+### Option: `anthropic_auth_token`
+
+The API key / virtual key used to authenticate against `anthropic_base_url`.
+Stored as a `password` field so it's masked in the UI.
+
+### Option: `anthropic_model`
+
+Override the default model Claude Code requests, e.g. `claude-sonnet-4-5`.
+Useful when your gateway expects a specific model alias.
+
+**Note**: _Claude Code's own config/auth (`~/.claude`) is stored under
+`/data/claude`, which is part of this add-on's persistent storage. It survives
+add-on restarts and updates, unlike the rest of the container filesystem._
+
 ## Resetting your VSCode settings to the add-on defaults
 
 The add-on updates your settings to be optimized for use with Home Assistant.

@@ -22,6 +22,7 @@ COPY vscode.extensions /root/vscode.extensions
 ARG BUILD_ARCH=amd64
 ARG CODE_SERVER_VERSION="v4.107.0"
 ARG HA_CLI_VERSION="4.45.0"
+ARG CLAUDE_CODE_VERSION="2.1.220"
 # hadolint ignore=SC2181, DL3008
 RUN \
     apt-get update \
@@ -36,6 +37,8 @@ RUN \
         locales=2.41-12 \
         mariadb-client=1:11.8.3-0+deb13u1 \
         mosquitto-clients=2.0.21-1 \
+        nodejs \
+        npm \
         net-tools=2.10-1.3 \
         nmap=7.95+dfsg-3 \
         openssh-client=1:10.0p1-7 \
@@ -92,6 +95,8 @@ RUN \
     && curl -L -s -o /usr/bin/ha \
         "https://github.com/home-assistant/cli/releases/download/${HA_CLI_VERSION}/ha_${BUILD_ARCH}" \
     && chmod a+x /usr/bin/ha \
+    \
+    && npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
     \
     && git clone --branch master --single-branch --depth 1 \
         "https://github.com/robbyrussell/oh-my-zsh.git" ~/.oh-my-zsh \
