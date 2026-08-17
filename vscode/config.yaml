@@ -1,6 +1,6 @@
 ---
 name: Studio Code Server (Claude)
-version: "0.0.2"
+version: "0.0.3"
 slug: vscode_claude
 description: Fully featured Visual Studio Code (VSCode) experience integrated in the Home Assistant frontend, with Claude Code baked in.
 url: https://github.com/hassio-addons/addon-vscode
