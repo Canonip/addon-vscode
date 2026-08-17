@@ -96,9 +96,16 @@ RUN \
     && chmod a+x /usr/bin/ha \
     \
     && curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
-    && ln -s /root/.local/bin/claude /usr/local/bin/claude \
     && chmod +x /root/.local/bin/claude \
-    && find /usr/local/lib/code-server/lib/vscode/extensions/Anthropic.claude-code-*/resources/native-binary -type f -name claude -exec chmod +x {} \; \
+    && ln -sf /root/.local/bin/claude /usr/local/bin/claude \
+    \
+    # The VSIX from the marketplace ships a linux-x64 native binary regardless
+    # of the build arch.  Replace it with the correctly-arch binary that the
+    # official installer just placed at /root/.local/bin/claude.
+    && find /usr/local/lib/code-server/lib/vscode/extensions/Anthropic.claude-code-*/resources/native-binary \
+        -type f -name claude \
+        -exec cp /root/.local/bin/claude {} \; \
+        -exec chmod +x {} \; \
     \
     && git clone --branch master --single-branch --depth 1 \
         "https://github.com/robbyrussell/oh-my-zsh.git" ~/.oh-my-zsh \
