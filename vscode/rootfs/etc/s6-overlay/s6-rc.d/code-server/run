@@ -32,7 +32,10 @@ export HASS_TOKEN="${SUPERVISOR_TOKEN:-}"
 # survives add-on restarts and image updates (container root fs does not).
 export CLAUDE_CONFIG_DIR="/data/claude"
 export ANTHROPIC_CONFIG_DIR="/data/claude"
-mkdir -p "${CLAUDE_CONFIG_DIR}"
+# Isolate secure (keychain) storage so a previous `claude /login` OAuth token
+# doesn't conflict with the ANTHROPIC_API_KEY set from addon config.
+export CLAUDE_SECURESTORAGE_CONFIG_DIR="/data/claude/secure"
+mkdir -p "${CLAUDE_CONFIG_DIR}" "${CLAUDE_SECURESTORAGE_CONFIG_DIR}"
 
 # Log Claude setup for debugging
 if command -v claude >/dev/null 2>&1; then
