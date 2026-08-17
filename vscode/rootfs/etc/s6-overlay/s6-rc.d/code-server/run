@@ -31,6 +31,7 @@ export HASS_TOKEN="${SUPERVISOR_TOKEN:-}"
 # Persist Claude Code auth/config in the add-on's /data volume, so it
 # survives add-on restarts and image updates (container root fs does not).
 export CLAUDE_CONFIG_DIR="/data/claude"
+export ANTHROPIC_CONFIG_DIR="/data/claude"
 mkdir -p "${CLAUDE_CONFIG_DIR}"
 
 # Log Claude setup for debugging
