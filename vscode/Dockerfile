@@ -22,7 +22,7 @@ COPY vscode.extensions /root/vscode.extensions
 ARG BUILD_ARCH=amd64
 ARG CODE_SERVER_VERSION="v4.107.0"
 ARG HA_CLI_VERSION="4.45.0"
-ARG CLAUDE_CODE_VERSION="2.1.220"
+ARG OPENCODE_VERSION="1.18.18"
 # hadolint ignore=SC2181, DL3008
 RUN \
     apt-get update \
@@ -95,17 +95,12 @@ RUN \
         "https://github.com/home-assistant/cli/releases/download/${HA_CLI_VERSION}/ha_${BUILD_ARCH}" \
     && chmod a+x /usr/bin/ha \
     \
-    && curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_CODE_VERSION}" \
-    && chmod +x /root/.local/bin/claude \
-    && ln -sf /root/.local/bin/claude /usr/local/bin/claude \
-    \
-    # The VSIX from the marketplace ships a linux-x64 native binary regardless
-    # of the build arch.  Replace it with the correctly-arch binary that the
-    # official installer just placed at /root/.local/bin/claude.
-    && find /usr/local/lib/code-server/lib/vscode/extensions/Anthropic.claude-code-*/resources/native-binary \
-        -type f -name claude \
-        -exec cp /root/.local/bin/claude {} \; \
-        -exec chmod +x {} \; \
+    # Install opencode CLI
+    && if [[ "${BUILD_ARCH}" = "aarch64" ]]; then OC_ARCH="arm64"; else OC_ARCH="x64"; fi \
+    && curl -fsSL -o /tmp/opencode.tar.gz \
+        "https://github.com/sst/opencode/releases/download/v${OPENCODE_VERSION}/opencode-linux-${OC_ARCH}.tar.gz" \
+    && tar -xzf /tmp/opencode.tar.gz -C /usr/local/bin opencode \
+    && chmod +x /usr/local/bin/opencode \
     \
     && git clone --branch master --single-branch --depth 1 \
         "https://github.com/robbyrussell/oh-my-zsh.git" ~/.oh-my-zsh \

@@ -28,40 +28,46 @@ options+=(--auth none)
 export HASS_SERVER="http://supervisor/core"
 export HASS_TOKEN="${SUPERVISOR_TOKEN:-}"
 
-# Persist Claude Code auth/config in the add-on's /data volume, so it
-# survives add-on restarts and image updates (container root fs does not).
-export CLAUDE_CONFIG_DIR="/data/claude"
-export ANTHROPIC_CONFIG_DIR="/data/claude"
-# Isolate secure (keychain) storage so a previous `claude /login` OAuth token
-# doesn't conflict with the ANTHROPIC_API_KEY set from addon config.
-export CLAUDE_SECURESTORAGE_CONFIG_DIR="/data/claude/secure"
-mkdir -p "${CLAUDE_CONFIG_DIR}" "${CLAUDE_SECURESTORAGE_CONFIG_DIR}"
+# Persist opencode config in the add-on's /data volume so it survives restarts.
+mkdir -p /data/opencode
+ln -sfn /data/opencode /root/.config/opencode
 
-# Log Claude setup for debugging
-if command -v claude >/dev/null 2>&1; then
-    bashio::log.info "Claude CLI found: $(claude --version 2>&1 || echo 'version check failed')"
+# Write opencode config.json from addon options
+if bashio::config.has_value 'ai_base_url' || bashio::config.has_value 'ai_api_key'; then
+    BASE_URL=""
+    API_KEY=""
+    MODEL="openai/gpt-4o"
+
+    if bashio::config.has_value 'ai_base_url'; then
+        BASE_URL="$(bashio::config 'ai_base_url')"
+    fi
+    if bashio::config.has_value 'ai_api_key'; then
+        API_KEY="$(bashio::config 'ai_api_key')"
+    fi
+    if bashio::config.has_value 'ai_model'; then
+        MODEL="$(bashio::config 'ai_model')"
+    fi
+
+    cat > /data/opencode/config.json <<EOF
+{
+  "\$schema": "https://opencode.ai/config.json",
+  "model": "${MODEL}",
+  "provider": {
+    "openai": {
+      "apiKey": "${API_KEY}",
+      "baseURL": "${BASE_URL}"
+    }
+  }
+}
+EOF
+    bashio::log.info "opencode config written (model: ${MODEL}, baseURL: ${BASE_URL})"
+fi
+
+# Log opencode availability
+if command -v opencode >/dev/null 2>&1; then
+    bashio::log.info "opencode CLI found: $(opencode --version 2>&1 || echo 'version check failed')"
 else
-    bashio::log.warning "Claude CLI not found in PATH"
-fi
-
-# Optionally route Claude Code through a LiteLLM (or other Anthropic-
-# compatible) gateway instead of api.anthropic.com.
-if bashio::config.has_value 'anthropic_base_url'; then
-    export ANTHROPIC_BASE_URL="$(bashio::config 'anthropic_base_url')"
-fi
-if bashio::config.has_value 'anthropic_auth_token'; then
-    export ANTHROPIC_API_KEY="$(bashio::config 'anthropic_auth_token')"
-fi
-if bashio::config.has_value 'anthropic_model'; then
-    export ANTHROPIC_MODEL="$(bashio::config 'anthropic_model')"
-fi
-
-# Log API configuration
-if [[ -n "${ANTHROPIC_BASE_URL}" ]]; then
-    bashio::log.info "Using custom Anthropic API: ${ANTHROPIC_BASE_URL}"
-fi
-if [[ -n "${ANTHROPIC_MODEL}" ]]; then
-    bashio::log.info "Using model: ${ANTHROPIC_MODEL}"
+    bashio::log.warning "opencode CLI not found in PATH"
 fi
 
 # Run the code server
